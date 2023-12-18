@@ -26,7 +26,7 @@ public static class Example999_AutoPlugin
     private static int s_sampleIndex; 
     private static string plannerprompt = @"
 
-        What is the directory in C:\demos that has the longest name, and how many files does it contain?
+        Search C:\Temp for powerpoint files
 
     ";
 
@@ -216,6 +216,7 @@ public static class Example999_AutoPlugin
                         }
                         else
                         {
+                            Console.WriteLine("Compilation successful.");
                             ms.Seek(0, SeekOrigin.Begin);
                             Assembly assembly = Assembly.Load(ms.ToArray());
 

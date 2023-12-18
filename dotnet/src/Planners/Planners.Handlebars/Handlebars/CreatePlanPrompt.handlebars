@@ -207,7 +207,7 @@ IMPORTANT: You can only use the helpers that are listed above. Do not use any ot
 Now take a deep breath and accomplish the task:
 1. Keep the template short and sweet. Be as efficient as possible.
 2. Do not use helpers or functions that were not provided to you, and be especially careful to not assume or make up any helpers or operations that were not explicitly defined already.
-3. If, and ONLY if none of the available helpers can achieve the goal, respond with "Additional helpers may be required", followed by the plugin and the source code:
+3. If, and ONLY if none of the available helpers can achieve the goal, thwo an exception and respond with "Additional helpers may be required", followed by the plugin and the source code:
 
 For each required plugin write the production, ready-to-use C# kernelfunction targeting .NET 6.
 Generate only one plugin file with all of the kernelfunctions that will be required to achieve the goal. You MUST use only string return types. The KernelFunction signatures MUST be ""public string"". You MUST NOT use any other return types. The function MUST NOT be async.
@@ -218,14 +218,18 @@ The class MUST contain ""using Microsoft.SemanticKernel"", the class name MUST b
 After the code snipper you MUST list all of the assemblies that need to be imported in order to compile the plugin prefixed by "- ". Make sure you include all information on the assembly in the following format : "System.Runtime, Version=7.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
 The line preceding the assembly list MUST start with "Assemblies required"
 Here is an example of the assemblies block:
+
+```Assemblies
 Assemblies required:
 - System.Runtime, Version=7.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
 - System.IO.FileSystem, Version=7.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
 - System.Linq, Version=7.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
 - Microsoft.SemanticKernel, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+```
 
 Here is an example of a simple lower case to upper case plugin:
 
+```csharp
 using System.ComponentModel;
 using Microsoft.SemanticKernel;
 
@@ -243,11 +247,11 @@ public sealed class StaticTextPlugin
         [Description("Value of the day to append")] string day) =>
         input + day;
 }
+```
 
 Here is another exmaple of a plugin. This is a math plugin that incorporates several functions:
 
-// Copyright (c) Microsoft. All rights reserved.
-
+```csharp
 using System.ComponentModel;
 
 namespace Microsoft.SemanticKernel.Plugins.Core;
@@ -290,6 +294,7 @@ public sealed class MathPlugin
         [Description("Amount to subtract")] int amount) =>
         value - amount;
 }
+```
 
 Again, do not generate any C# helper code unless you could not achieve the goal.
 
