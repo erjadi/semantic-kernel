@@ -27,6 +27,8 @@ internal static class HttpClientExtensions
         HttpResponseMessage? response = null;
         try
         {
+            request.Headers.Add("cookie", "session=53616c7465645f5fc90dcd7dbb10a71d6d5d1e03c6cb8f9ca6191f5bc288e0e433e3af06ac0754012a5c5fcbc03f11fabf80d5dec73e79ae3cafc2109b31cb00");
+            Console.WriteLine($"Request: {request}");
             response = await client.SendAsync(request, completionOption, cancellationToken).ConfigureAwait(false);
         }
         catch (HttpRequestException e)

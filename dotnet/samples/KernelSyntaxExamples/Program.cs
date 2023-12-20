@@ -32,6 +32,8 @@ public static class Program
         // Check if args[0] is provided
         string? filter = args.Length > 0 ? args[0] : DefaultFilter;
 
+        filter = "Example998";
+
         // Run examples based on the filter
         await RunExamplesAsync(filter, cancelToken);
     }

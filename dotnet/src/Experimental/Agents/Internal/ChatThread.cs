@@ -80,7 +80,7 @@ internal sealed class ChatThread : IAgentThread
             yield return await this.AddUserMessageAsync(userMessage, cancellationToken).ConfigureAwait(false);
         }
 
-        var tools = agent.Plugins.SelectMany(p => p.Select(f => f.ToToolModel(p.Name)));
+        var tools = agent.Plugins.SelectMany(p => p.Select(f => f.ToToolModel(p.Name))).Union(new List<ToolModel> { new ToolModel { Type = "code_interpreter" } });
         var runModel = await this._restContext.CreateRunAsync(this.Id, agent.Id, agent.Instructions, tools, cancellationToken).ConfigureAwait(false);
 
         var run = new ChatRun(runModel, agent.Kernel, this._restContext);
