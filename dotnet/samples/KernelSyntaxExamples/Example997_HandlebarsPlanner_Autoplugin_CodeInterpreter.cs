@@ -14,6 +14,9 @@ using MongoDB.Bson;
 using Newtonsoft.Json;
 using Plugins.DictionaryPlugin;
 using RepoUtils;
+using Microsoft.SemanticKernel.Experimental.Agents;
+using Microsoft.SemanticKernel.Plugins.Core;
+using System.Linq;
 
 public class Input
 {
@@ -72,7 +75,7 @@ public static class Example997_HandlebarsPlanner_Autoplugin_CodeInterpreter
         Console.WriteLine($"======== [Handlebars Planner] Sample {s_sampleIndex++} - Create and Execute {name} Plan ========");
     }
 
-    private static async Task RunSampleAsync(string goal, bool shouldPrintPrompt = false, KernelPlugin? kp = null)
+    private static async Task RunSampleAsync(string goal, bool shouldPrintPrompt = false, List<KernelPlugin>? kp = null)
     {
         //string apiKey = TestConfiguration.AzureOpenAI.ApiKey;
         //string chatDeploymentName = TestConfiguration.AzureOpenAI.ChatDeploymentName;
@@ -105,7 +108,10 @@ public static class Example997_HandlebarsPlanner_Autoplugin_CodeInterpreter
 
         if (kp != null)
         {
-            kernel.Plugins.Add(kp);
+            foreach (var k in kp)
+            {
+                kernel.Plugins.Add(k);
+            }
         }
 
         //if (pluginDirectoryNames[0] == StringParamsDictionaryPlugin.PluginName)
@@ -161,30 +167,23 @@ public static class Example997_HandlebarsPlanner_Autoplugin_CodeInterpreter
         Console.WriteLine($"\nResult:\n{result}\n");
     }
 
-    private static string kfunctiontest()
-    {
-        Console.WriteLine("kfunctiontest called");
-        Console.ReadLine();
-        return "";
-    }
-
     private static async Task DynamicCodeInterpreterPluginAsync(bool shouldPrintPrompt = false)
     {
-
-
+        List<IAgent> codeAgents = new();
         WriteSampleHeadingToConsole("DynamicCodeInterpreterPlugin");
-
         try
         {
-            KernelPlugin kp = null;
+            List<KernelPlugin> kp = new();
             bool needMorePlugins = true;
+            List<KernelFunction> kernelFunctions = new List<KernelFunction>();
+
             while (needMorePlugins)
             {
                 // Load additional plugins to enable planner but not enough for the given goal.
                 try
                 {
                     needMorePlugins = false;
-                    await RunSampleAsync("Tell me in the 1000 first decimals of Pi, what is the ratio of even vs odd numbers?", shouldPrintPrompt, kp);
+                    await RunSampleAsync("Take the first 10000 decimals of PI, add them together. Is this a prime number?", shouldPrintPrompt, kp);
                 }
                 catch (Exception e)
                 {
@@ -195,14 +194,36 @@ public static class Example997_HandlebarsPlanner_Autoplugin_CodeInterpreter
                     {
                         var helpers = match.Value;
                         List<Helper> required_helpers = JsonConvert.DeserializeObject<List<Helper>>(helpers);
-                        kp = KernelPluginFactory.CreateFromFunctions("DynamicPlugins", new List<KernelFunction>() {
-                            KernelFunctionFactory.CreateFromMethod(kfunctiontest)
-                        });
+                        //kp = KernelPluginFactory.CreateFromFunctions("DynamicPlugins", new List<KernelFunction>() {
+                        //    KernelFunctionFactory.CreateFromMethod(async (string question) =>
+                        //            await (
+                        //                await new AgentBuilder()
+                        //                    .WithOpenAIChatCompletion(TestConfiguration.OpenAI.ChatModelId, TestConfiguration.OpenAI.ApiKey)
+                        //                    .WithDescription("You use code intepreter to answer a specific question")
+                        //                    .WithCodeInterpreter()
+                        //                .BuildAsync()
+                        //            ).AsPlugin().InvokeAsync(question)
+                        //    )
+                        //});
+
                         foreach (Helper h in required_helpers)
                         {
-                            Console.WriteLine($"Plugin {h.Name} is required.");
-
+                            IAgent codeAgent = await new AgentBuilder()
+                                                            .WithOpenAIChatCompletion(TestConfiguration.OpenAI.ChatModelId, TestConfiguration.OpenAI.ApiKey)
+                                                            .WithInstructions("You use code interpreter to implement the following function:\n" + h.Description + "\n And you follow the following schema\n" + h.AsJson())
+                                                            .WithCodeInterpreter()
+                                                            .WithName(h.Name)
+                                                        .BuildAsync();
+                            codeAgents.Add(codeAgent);
+                            kernelFunctions.Add(
+                                                KernelFunctionFactory.CreateFromMethod(async (string question) =>
+                                                    await codeAgent.AsPlugin().InvokeAsync(question)
+                                                 )
+                                               );
+                            Console.WriteLine($"Created assistant : {h.Name}.");
                         }
+                        string dynamicPluginsName = "DynamicPlugins_" + string.Join("_", required_helpers.Select(h => h.Name));
+                        kp.Add(KernelPluginFactory.CreateFromFunctions(dynamicPluginsName, kernelFunctions));
                     }
                 }
             }

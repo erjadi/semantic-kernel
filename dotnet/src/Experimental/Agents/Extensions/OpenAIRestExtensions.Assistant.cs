@@ -36,7 +36,7 @@ internal static partial class OpenAIRestExtensions
                 name = model.Name,
                 description = model.Description,
                 instructions = model.Instructions,
-                tools = new List<ToolModel>() { (new ToolModel { Type = "code_interpreter" }) },
+                tools = model.Tools,
                 file_ids = model.FileIds,
                 metadata = model.Metadata,
             };
